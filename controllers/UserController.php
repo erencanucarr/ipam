@@ -1,6 +1,7 @@
 <?php
 
 require_once 'models/User.php';
+require_once 'utils/Mailer.php';
 
 class UserController
 {
@@ -21,6 +22,10 @@ class UserController
             $role = $_POST['role'] ?? 'user';
             if ($name && $email && $password) {
                 User::create($name, $email, $password, $role);
+                // Send notification email to the new user
+                $subject = "Your IPAM Account Has Been Created";
+                $message = "Hello $name,\n\nYour account has been created in the IP Management System.\n\nLogin Email: $email\nRole: $role\n\nPlease contact your administrator if you have any questions.";
+                Mailer::sendNotificationEmail($email, $subject, $message);
                 header('Location: index.php?page=users');
                 exit;
             } else {

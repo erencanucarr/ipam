@@ -191,11 +191,14 @@
             flex: 1 1 0;
             background: linear-gradient(90deg, #1976d2 60%, #6c63ff 100%);
             color: #fff;
-            padding: 1.1em 0;
-            border-radius: 8px;
+            padding: 0.6em 0;
+            border-radius: 6px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 1.1em;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
             transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
@@ -359,6 +362,18 @@ $dashboard_help_docs = array_slice(HelpDoc::all(), 0, 2);
                     </div>
                 </div>
                 <form method="post" action="index.php?page=logout" style="width:100%;">
+<?php if (!empty($_SESSION['flash_success'])): ?>
+    <div style="background:#eaffea;color:#388e3c;border:1.5px solid #388e3c;padding:1em 1.2em;border-radius:8px;font-weight:600;margin-bottom:1.2em;">
+        <?= htmlspecialchars($_SESSION['flash_success']) ?>
+    </div>
+    <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+<?php if (!empty($_SESSION['flash_error'])): ?>
+    <div style="background:#ffeaea;color:#e53935;border:1.5px solid #e53935;padding:1em 1.2em;border-radius:8px;font-weight:600;margin-bottom:1.2em;">
+        <?= htmlspecialchars($_SESSION['flash_error']) ?>
+    </div>
+    <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
                     <button type="submit" class="logout-btn">Logout</button>
                 </form>
             </div>

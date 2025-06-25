@@ -135,6 +135,7 @@ class SubnetController
             $created = IpAddress::createBatch($ipDataArray);
             error_log("Subnet $subnet_id: Generated " . count($ips) . " IPs, created $created IPs.");
             AuditLog::create($_SESSION['user_id'], 'create', 'subnet', $subnet_id, 'Created subnet: ' . $data['name']);
+            $_SESSION['flash_success'] = "Subnet başarıyla eklendi.";
             header('Location: index.php?page=subnets');
             exit;
         }
