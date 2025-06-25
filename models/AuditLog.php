@@ -1,0 +1,52 @@
+<?php
+
+class AuditLog
+{
+    public static function all($limit = 100)
+    {
+        $conn = self::getConnection();
+        $stmt = $conn->prepare("SELECT audit_logs.*, users.name as user_name FROM audit_logs LEFT JOIN users ON audit_logs.user_id = users.id ORDER BY audit_logs.id DESC LIMIT ?");
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $meta = $stmt->result_metadata();
+        $logs = [];
+        if ($meta) {
+            $fields = $meta->fetch_fields();
+            while ($stmt->fetch()) {
+                $row = [];
+                $bindArgs = [];
+                foreach ($fields as $field) {
+                    $row[$field->name] = null;
+                    $bindArgs[] = &$row[$field->name];
+                }
+                call_user_func_array([$stmt, 'bind_result'], $bindArgs);
+                if ($stmt->fetch()) {
+                    $logs[] = $row;
+                }
+            }
+        }
+        $conn->close();
+        return $logs;
+    }
+
+    public static function create($user_id, $action, $target_type, $target_id, $description = null)
+    {
+        $conn = self::getConnection();
+        $device_ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+        $created_at = date('Y-m-d H:i:s');
+        $stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, target_type, target_id, description, device_ip, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ississs", $user_id, $action, $target_type, $target_id, $description, $device_ip, $created_at);
+        $stmt->execute();
+        $conn->close();
+        return $stmt->insert_id;
+    }
+
+    private static function getConnection()
+    {
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        if ($conn->connect_error) {
+            die("Database connection failed: " . $conn->connect_error);
+        }
+        return $conn;
+    }
+}
