@@ -9,16 +9,30 @@ Designed for easy deployment on any standard Linux hosting (cPanel, Plesk, Direc
 
 - **User Management:**  
   - Role-based access: Admin, User, Support  
-  - Secure authentication and session management
+  - Secure authentication and session management  
+  - User-friendly success and error messages after all actions
 
 - **Subnet & IP Management:**  
   - Create, edit, delete, and list subnets  
   - Bulk IP address generation and management  
-  - Assign statuses, descriptions, and clients to IPs
+  - Assign statuses, descriptions, and clients to IPs  
+  - **Export/Import subnets** in JSON, XML, and CSV formats  
+  - **Advanced search/filter** for subnets
+
+- **IP Conflict & Usage Reporting:**  
+  - Detects duplicate/conflicting IPs  
+  - Subnet utilization and unused IPs report  
+  - Accessible from the dashboard
 
 - **Audit Logging:**  
   - Tracks all critical actions (user, subnet, IP changes)  
-  - Viewable audit log with user and device info
+  - Viewable audit log with user and device info  
+  - **Advanced filtering** (by user, action, date) and color-coded actions  
+  - Modern, readable UI
+
+- **Email Notification System:**  
+  - Sends notification emails (e.g., on user creation)  
+  - Easy to configure sender address
 
 - **Help Docs System:**  
   - Integrated, SQL-based help documentation  
@@ -26,7 +40,9 @@ Designed for easy deployment on any standard Linux hosting (cPanel, Plesk, Direc
 
 - **Modern UI:**  
   - Responsive, mobile-friendly dashboard  
-  - Clean, user-friendly design
+  - Clean, user-friendly design  
+  - Compact, visually balanced action buttons  
+  - All notification and error messages are clear and visually distinct
 
 - **Performance Optimizations:**  
   - Batch IP insertions for large subnets  
