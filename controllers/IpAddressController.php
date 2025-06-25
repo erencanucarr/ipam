@@ -125,14 +125,27 @@ class IpAddressController
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$ip_ids);
             $stmt->execute();
-            $result = $stmt->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $tid = intval($row['target_id']);
-                $ip_histories[$tid][] = [
-                    'user_name' => $row['user_name'] ?? 'System',
-                    'created_at' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '-',
-                    'device_ip' => $row['device_ip'] ?? '-'
-                ];
+            $stmt->store_result();
+            $meta = $stmt->result_metadata();
+            if ($meta) {
+                $fields = $meta->fetch_fields();
+                while ($stmt->fetch()) {
+                    $row = [];
+                    $bindArgs = [];
+                    foreach ($fields as $field) {
+                        $row[$field->name] = null;
+                        $bindArgs[] = &$row[$field->name];
+                    }
+                    call_user_func_array([$stmt, 'bind_result'], $bindArgs);
+                    if ($stmt->fetch()) {
+                        $tid = intval($row['target_id']);
+                        $ip_histories[$tid][] = [
+                            'user_name' => $row['user_name'] ?? 'System',
+                            'created_at' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '-',
+                            'device_ip' => $row['device_ip'] ?? '-'
+                        ];
+                    }
+                }
             }
             $stmt->close();
             $conn->close();

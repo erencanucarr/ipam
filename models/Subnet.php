@@ -41,8 +41,23 @@ class Subnet
         $stmt = $conn->prepare("SELECT * FROM subnets WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $subnet = $result->fetch_assoc();
+        $stmt->store_result();
+        $meta = $stmt->result_metadata();
+        $subnet = null;
+        if ($meta) {
+            $fields = $meta->fetch_fields();
+            $row = [];
+            $bindArgs = [];
+            foreach ($fields as $field) {
+                $row[$field->name] = null;
+                $bindArgs[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $bindArgs);
+            if ($stmt->fetch()) {
+                $subnet = $row;
+            }
+        }
+        $stmt->close();
         $conn->close();
         return $subnet;
     }

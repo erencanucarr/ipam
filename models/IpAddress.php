@@ -8,11 +8,25 @@ class IpAddress
         $stmt = $conn->prepare("SELECT * FROM ip_addresses WHERE subnet_id = ? ORDER BY id ASC");
         $stmt->bind_param("i", $subnet_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $stmt->store_result();
+        $meta = $stmt->result_metadata();
         $ips = [];
-        while ($row = $result->fetch_assoc()) {
-            $ips[] = $row;
+        if ($meta) {
+            $fields = $meta->fetch_fields();
+            while ($stmt->fetch()) {
+                $row = [];
+                $bindArgs = [];
+                foreach ($fields as $field) {
+                    $row[$field->name] = null;
+                    $bindArgs[] = &$row[$field->name];
+                }
+                call_user_func_array([$stmt, 'bind_result'], $bindArgs);
+                if ($stmt->fetch()) {
+                    $ips[] = $row;
+                }
+            }
         }
+        $stmt->close();
         $conn->close();
         return $ips;
     }
@@ -23,8 +37,23 @@ class IpAddress
         $stmt = $conn->prepare("SELECT * FROM ip_addresses WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $ip = $result->fetch_assoc();
+        $stmt->store_result();
+        $meta = $stmt->result_metadata();
+        $ip = null;
+        if ($meta) {
+            $fields = $meta->fetch_fields();
+            $row = [];
+            $bindArgs = [];
+            foreach ($fields as $field) {
+                $row[$field->name] = null;
+                $bindArgs[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $bindArgs);
+            if ($stmt->fetch()) {
+                $ip = $row;
+            }
+        }
+        $stmt->close();
         $conn->close();
         return $ip;
     }
