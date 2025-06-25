@@ -19,6 +19,94 @@ class SubnetController
         $action = $_GET['action'] ?? 'list';
         $id = isset($_GET['id']) ? intval($_GET['id']) : null;
 
+        // EXPORT logic
+        if ($action === 'export' && isset($_GET['format'])) {
+            $format = strtolower($_GET['format']);
+            $subnets = Subnet::all();
+            if ($format === 'json') {
+                header('Content-Type: application/json');
+                header('Content-Disposition: attachment; filename="subnets.json"');
+                echo json_encode($subnets, JSON_PRETTY_PRINT);
+                exit;
+            } elseif ($format === 'xml') {
+                header('Content-Type: application/xml');
+                header('Content-Disposition: attachment; filename="subnets.xml"');
+                $xml = new SimpleXMLElement('<subnets/>');
+                foreach ($subnets as $subnet) {
+                    $item = $xml->addChild('subnet');
+                    foreach ($subnet as $k => $v) {
+                        $item->addChild($k, htmlspecialchars($v));
+                    }
+                }
+                echo $xml->asXML();
+                exit;
+            } elseif ($format === 'csv') {
+                header('Content-Type: text/csv');
+                header('Content-Disposition: attachment; filename="subnets.csv"');
+                $out = fopen('php://output', 'w');
+                if (!empty($subnets)) {
+                    fputcsv($out, array_keys($subnets[0]));
+                    foreach ($subnets as $row) {
+                        fputcsv($out, $row);
+                    }
+                }
+                fclose($out);
+                exit;
+            } else {
+                header('Location: index.php?page=subnets');
+                exit;
+            }
+        }
+
+        // IMPORT logic
+        if ($action === 'import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+                header('Location: index.php?page=subnets&error=upload');
+                exit;
+            }
+            $file = $_FILES['import_file']['tmp_name'];
+            $filename = $_FILES['import_file']['name'];
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $imported = 0;
+            $subnets = [];
+            if ($ext === 'json') {
+                $data = json_decode(file_get_contents($file), true);
+                if (is_array($data)) $subnets = $data;
+            } elseif ($ext === 'xml') {
+                $xml = simplexml_load_file($file);
+                if ($xml && isset($xml->subnet)) {
+                    foreach ($xml->subnet as $item) {
+                        $row = [];
+                        foreach ($item as $k => $v) $row[$k] = (string)$v;
+                        $subnets[] = $row;
+                    }
+                }
+            } elseif ($ext === 'csv') {
+                $handle = fopen($file, 'r');
+                if ($handle) {
+                    $header = fgetcsv($handle);
+                    while (($row = fgetcsv($handle)) !== false) {
+                        $subnets[] = array_combine($header, $row);
+                    }
+                    fclose($handle);
+                }
+            }
+            // Insert subnets
+            foreach ($subnets as $row) {
+                if (!isset($row['name'], $row['network'], $row['cidr'])) continue;
+                $data = [
+                    'name' => $row['name'],
+                    'network' => $row['network'],
+                    'cidr' => intval($row['cidr']),
+                    'description' => $row['description'] ?? ''
+                ];
+                Subnet::create($data);
+                $imported++;
+            }
+            header('Location: index.php?page=subnets&imported=' . $imported);
+            exit;
+        }
+
         if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'name' => $_POST['name'] ?? '',
