@@ -126,7 +126,7 @@ class IpAddress
         return $stmt->affected_rows;
     }
 
-    private static function getConnection()
+    public static function getConnection()
     {
         $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         if ($conn->connect_error) {

@@ -158,8 +158,12 @@
                             <td><?= htmlspecialchars($user['email']) ?></td>
                             <td><span class="role-badge"><?= htmlspecialchars($user['role']) ?></span></td>
                             <td style="text-align:center;">
-                                <a href="index.php?page=users&action=edit&id=<?= urlencode($user['id']) ?>" class="action-btn edit">Edit</a>
-                                <a href="index.php?page=users&action=delete&id=<?= urlencode($user['id']) ?>" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                <?php if ($_SESSION['user_role'] === 'admin'): ?>
+                                    <a href="index.php?page=users&action=edit&id=<?= urlencode($user['id']) ?>" class="action-btn edit">Edit</a>
+                                    <a href="index.php?page=users&action=delete&id=<?= urlencode($user['id']) ?>" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                <?php elseif ($_SESSION['user_role'] === 'support'): ?>
+                                    <a href="index.php?page=users&action=edit&id=<?= urlencode($user['id']) ?>" class="action-btn edit">Edit</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

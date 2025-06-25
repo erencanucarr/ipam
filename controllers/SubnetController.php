@@ -166,7 +166,17 @@ class SubnetController
             $subnet = Subnet::find($id);
             require 'views/subnets/edit.php';
         } else {
-            $subnets = Subnet::all();
+            // Advanced search/filter support
+            $filters = [];
+            if (!empty($_GET['name'])) $filters['name'] = $_GET['name'];
+            if (!empty($_GET['network'])) $filters['network'] = $_GET['network'];
+            if (!empty($_GET['cidr'])) $filters['cidr'] = $_GET['cidr'];
+            if (!empty($_GET['description'])) $filters['description'] = $_GET['description'];
+            if (!empty($filters)) {
+                $subnets = Subnet::search($filters);
+            } else {
+                $subnets = Subnet::all();
+            }
             require 'views/subnets/index.php';
         }
     }

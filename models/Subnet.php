@@ -29,6 +29,49 @@ class Subnet
         $conn->close();
         return $subnets;
     }
+public static function search($filters = [])
+    {
+        $conn = self::getConnection();
+        $sql = "SELECT * FROM subnets WHERE 1=1";
+        $params = [];
+        $types = "";
+
+        if (!empty($filters['name'])) {
+            $sql .= " AND name LIKE ?";
+            $params[] = "%" . $filters['name'] . "%";
+            $types .= "s";
+        }
+        if (!empty($filters['network'])) {
+            $sql .= " AND network LIKE ?";
+            $params[] = "%" . $filters['network'] . "%";
+            $types .= "s";
+        }
+        if (!empty($filters['cidr'])) {
+            $sql .= " AND cidr = ?";
+            $params[] = intval($filters['cidr']);
+            $types .= "i";
+        }
+        if (!empty($filters['description'])) {
+            $sql .= " AND description LIKE ?";
+            $params[] = "%" . $filters['description'] . "%";
+            $types .= "s";
+        }
+        $sql .= " ORDER BY id DESC";
+        $stmt = $conn->prepare($sql);
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $subnets = [];
+        while ($row = $result->fetch_assoc()) {
+            $subnets[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $subnets;
+    }
 
     public static function getAll()
     {

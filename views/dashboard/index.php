@@ -372,6 +372,7 @@ $dashboard_help_docs = array_slice(HelpDoc::all(), 0, 2);
                     <a href="index.php?page=users">User Management</a>
                     <a href="index.php?page=subnets">Subnets</a>
                     <a href="index.php?page=audit_logs">Audit Log</a>
+                    <a href="index.php?page=ipreport">IP Usage & Conflict Report</a>
                     <?php endif; ?>
                 </div>
                 <hr style="border: none; border-top: 2px solid #e3eafc; margin: 0 0 2em 0;">

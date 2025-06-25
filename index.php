@@ -67,6 +67,11 @@ switch ($page) {
         $controller = new SettingsController();
         $controller->index();
         break;
+    case 'ipreport':
+        require_once 'controllers/IpReportController.php';
+        $controller = new IpReportController();
+        $controller->handle();
+        break;
     default:
         header("HTTP/1.0 404 Not Found");
         echo "Page not found.";
