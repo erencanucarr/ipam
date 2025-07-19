@@ -5,6 +5,21 @@ class HelpDoc
     // Assumes $mysqli is available globally from config.php
     public static function all()
     {
+        if (defined('MOCK_MODE') && MOCK_MODE) {
+            global $mock_data;
+            $docs = [];
+            foreach ($mock_data['help_docs'] as $doc) {
+                $docs[] = [
+                    'id' => $doc['id'],
+                    'title' => htmlspecialchars($doc['title']),
+                    'content' => nl2br(htmlspecialchars($doc['content'])),
+                    'author' => htmlspecialchars($doc['author']),
+                    'created_at' => date('d.m.Y H:i', strtotime($doc['created_at']))
+                ];
+            }
+            return $docs;
+        }
+        
         $conn = self::getConnection();
         $stmt = $conn->prepare("SELECT * FROM help_docs ORDER BY created_at DESC, id DESC");
         $stmt->execute();
@@ -39,6 +54,20 @@ class HelpDoc
 
     public static function create($title, $content, $author)
     {
+        if (defined('MOCK_MODE') && MOCK_MODE) {
+            global $mock_data;
+            $newId = count($mock_data['help_docs']) + 1;
+            $newDoc = [
+                'id' => $newId,
+                'title' => $title,
+                'content' => $content,
+                'author' => $author,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $mock_data['help_docs'][] = $newDoc;
+            return $newId;
+        }
+        
         $conn = self::getConnection();
         $stmt = $conn->prepare("INSERT INTO help_docs (title, content, author, created_at) VALUES (?, ?, ?, NOW())");
         $stmt->bind_param("sss", $title, $content, $author);
@@ -46,6 +75,7 @@ class HelpDoc
         $stmt->close();
         $conn->close();
     }
+    
     private static function getConnection()
     {
         $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);

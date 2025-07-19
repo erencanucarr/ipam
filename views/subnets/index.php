@@ -1,302 +1,218 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Subnets - Simple IPAM</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f0f4f8;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 950px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 2.5em 2em 2em 2em;
-            border-radius: 20px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08);
-        }
-        .subnet-search-form {
-            background: #f8fafc;
-            border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            padding: 1.2em 1.5em 1em 1.5em;
-            margin-bottom: 2.2em !important;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1em;
-            align-items: flex-end;
-            justify-content: center;
-        }
-        .subnet-search-form input[type="text"] {
-            padding: 0.7em 1.1em;
-            border-radius: 7px;
-            border: 1px solid #b0bec5;
-            min-width: 140px;
-            font-size: 1em;
-            background: #fff;
-            margin-bottom: 0;
-        }
-        .subnet-search-form button,
-        .subnet-search-form a {
-            background: #388e3c;
-            color: #fff;
-            padding: 0.7em 1.5em;
-            border-radius: 7px;
-            font-weight: 500;
-            font-size: 1em;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            margin-bottom: 0;
-            transition: background 0.2s, color 0.2s;
-            box-shadow: 0 2px 8px rgba(56, 142, 60, 0.08);
-        }
-        .subnet-search-form a {
-            background: #b0bec5;
-            color: #222;
-            margin-left: 0.2em;
-            box-shadow: 0 2px 8px rgba(176, 190, 197, 0.08);
-        }
-        .subnet-search-form button:hover {
-            background: #256029;
-        }
-        .subnet-search-form a:hover {
-            background: #90a4ae;
-            color: #111;
-        }
-        h1 {
-            text-align: center;
-            color: #1a237e;
-            margin-bottom: 1.5em;
-            letter-spacing: 1px;
-        }
-        .actions-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.7em;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 1.2em;
-        }
-        .actions-row a,
-        .actions-row button,
-        .import-form label.custom-file-label {
-            display: inline-block;
-            background: #1976d2;
-            color: #fff;
-            padding: 0.7em 1.5em;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 1em;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-            transition: background 0.2s;
-            border: none;
-            cursor: pointer;
-            margin: 0;
-            vertical-align: middle;
-        }
-        .actions-row a[href*="action=create"] { background: #1976d2; }
-        .actions-row a.export-json { background: #388e3c; }
-        .actions-row a.export-xml { background: #1976d2; }
-        .actions-row a.export-csv { background: #fbc02d; color: #333; }
-        .actions-row button,
-        .actions-row .custom-file-label { background: #1976d2; }
-        .actions-row a:hover,
-        .actions-row button:hover,
-        .import-form label.custom-file-label:hover {
-            background: #0d47a1;
-            color: #fff;
-        }
-        .actions-row a.export-json:hover { background: #256029; }
-        .actions-row a.export-csv:hover { background: #f9a825; color: #222; }
-        .import-form {
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-            margin-left: 0.5em;
-        }
-        .import-form input[type="file"] {
-            display: none;
-        }
-        .import-form label.custom-file-label {
-            background: #0288d1;
-            color: #fff;
-            border: none;
-            padding: 0.7em 1.5em;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 1em;
-            box-shadow: 0 2px 8px rgba(2, 136, 209, 0.08);
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-        .import-form .file-name {
-            margin-left: 0.5em;
-            font-size: 0.98em;
-            color: #333;
-            background: #f0f4f8;
-            border-radius: 4px;
-            padding: 0.4em 0.8em;
-            min-width: 120px;
-            border: 1px solid #e0e0e0;
-        }
-        .import-form button {
-            background: #1976d2;
-            color: #fff;
-            border: none;
-            padding: 0.7em 1.5em;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 1em;
-            box-shadow: 0 2px 8px rgba(2, 136, 209, 0.08);
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-        .import-form button:hover {
-            background: #01579b;
-        }
-        /* Responsive for small screens */
-        @media (max-width: 600px) {
-            .top-bar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.5em;
-            }
-            .import-form {
-                margin-left: 0;
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #f8fafc;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-        }
-        th, td {
-            padding: 1em 0.7em;
-            text-align: left;
-        }
-        th {
-            background: #e3eafc;
-            color: #1a237e;
-            font-size: 1.05em;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-        tr:nth-child(even) {
-            background: #f0f4f8;
-        }
-        tr:hover {
-            background: #e3eafc;
-            transition: background 0.2s;
-        }
-        .actions a {
-            margin-right: 0.7em;
-            color: #1976d2;
-            text-decoration: none;
-            font-weight: 500;
-            border-bottom: 1px solid transparent;
-            transition: color 0.2s, border-bottom 0.2s;
-        }
-        .actions a:hover {
-            color: #0d47a1;
-            border-bottom: 1px solid #1976d2;
-        }
-        .back-link {
-            display: block;
-            margin-top: 2em;
-            text-align: center;
-            color: #6c63ff;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 1.1em;
-            transition: color 0.2s;
-        }
-        .back-link:hover {
-            color: #1a237e;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="subnet-card" style="background:#f8fafc;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:2em 1.5em 1.5em 1.5em;margin-bottom:1.5em;">
-            <h1 style="margin-top:0;text-align:center;">Subnets</h1>
-            <!-- Search/Filter Form -->
-            <form method="get" action="index.php" class="subnet-search-form" style="margin-bottom:1.2em;">
-                <input type="hidden" name="page" value="subnets">
-                <input type="text" name="name" placeholder="Name" value="<?= htmlspecialchars($_GET['name'] ?? '') ?>">
-                <input type="text" name="network" placeholder="Network" value="<?= htmlspecialchars($_GET['network'] ?? '') ?>">
-                <input type="text" name="cidr" placeholder="CIDR" value="<?= htmlspecialchars($_GET['cidr'] ?? '') ?>">
-                <input type="text" name="description" placeholder="Description" value="<?= htmlspecialchars($_GET['description'] ?? '') ?>">
-                <button type="submit">Filter</button>
-                <a href="index.php?page=subnets">Reset</a>
-            </form>
-            <!-- Actions Row -->
-            <div class="actions-row" style="display:flex;flex-wrap:wrap;gap:0.7em;justify-content:center;align-items:center;margin-bottom:1.2em;">
-                <a href="index.php?page=subnets&action=create">Add Subnet</a>
-                <a href="index.php?page=subnets&action=export&format=json" class="export-json">Export JSON</a>
-                <a href="index.php?page=subnets&action=export&format=xml" class="export-xml">Export XML</a>
-                <a href="index.php?page=subnets&action=export&format=csv" class="export-csv">Export CSV</a>
-                <form class="import-form" action="index.php?page=subnets&action=import" method="post" enctype="multipart/form-data" style="display:flex;align-items:center;gap:0.5em;">
-                    <input type="file" id="import_file" name="import_file" accept=".json,.xml,.csv" required style="display:none;">
-                    <label for="import_file" class="custom-file-label">Choose File</label>
-                    <span class="file-name" id="file-name">No file chosen</span>
-                    <button type="submit">Import</button>
-                </form>
-            </div>
-            <!-- Subnet Table -->
-            <div class="table-wrapper" style="overflow-x:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Network</th>
-                            <th>CIDR</th>
-                            <th>Description</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($subnets)): ?>
-                            <tr><td colspan="5">No subnets found.</td></tr>
-                        <?php else: foreach ($subnets as $subnet): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($subnet['name']) ?></td>
-                                <td><?= htmlspecialchars($subnet['network']) ?></td>
-                                <td><?= htmlspecialchars($subnet['cidr']) ?></td>
-                                <td><?= htmlspecialchars($subnet['description']) ?></td>
-                                <td class="actions">
-                                    <a href="index.php?page=ips&subnet_id=<?= $subnet['id'] ?>">Details</a>
-                                    <?php if ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'support'): ?>
-                                        <a href="index.php?page=subnets&action=edit&id=<?= $subnet['id'] ?>">Edit</a>
-                                    <?php endif; ?>
-                                    <?php if ($_SESSION['user_role'] === 'admin'): ?>
-                                        <a href="index.php?page=subnets&action=delete&id=<?= $subnet['id'] ?>" onclick="return confirm('Delete this subnet?')">Delete</a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <a class="back-link" href="index.php?page=dashboard">Back to Dashboard</a>
+<?php
+$page_title = 'Subnets - IPAM System';
+$current_page = 'subnets';
+ob_start();
+?>
+
+<div class="page-header">
+    <h1 class="page-title">Subnets</h1>
+    <p class="page-description">Manage your network subnets and IP address ranges</p>
+</div>
+
+<!-- Search/Filter Form -->
+<div class="card mb-6">
+    <div class="card-header">
+        <h3 class="text-lg font-semibold">Search & Filter</h3>
     </div>
-        <script>
-        // Show selected file name
-        document.querySelector('.import-form input[type="file"]').addEventListener('change', function() {
-            document.getElementById('file-name').textContent = this.files[0] ? this.files[0].name : 'No file chosen';
-        });
-        </script>
-        </body>
-        </html>
+    <div class="card-body">
+        <form method="get" action="index.php" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <input type="hidden" name="page" value="subnets">
+            <div class="form-group">
+                <label for="name" class="form-label">Name</label>
+                <input 
+                    id="name" 
+                    type="text" 
+                    name="name" 
+                    class="form-input" 
+                    placeholder="Search by name"
+                    value="<?= htmlspecialchars($_GET['name'] ?? '') ?>"
+                >
+            </div>
+            <div class="form-group">
+                <label for="network" class="form-label">Network</label>
+                <input 
+                    id="network" 
+                    type="text" 
+                    name="network" 
+                    class="form-input" 
+                    placeholder="Search by network"
+                    value="<?= htmlspecialchars($_GET['network'] ?? '') ?>"
+                >
+            </div>
+            <div class="form-group">
+                <label for="cidr" class="form-label">CIDR</label>
+                <input 
+                    id="cidr" 
+                    type="text" 
+                    name="cidr" 
+                    class="form-input" 
+                    placeholder="Search by CIDR"
+                    value="<?= htmlspecialchars($_GET['cidr'] ?? '') ?>"
+                >
+            </div>
+            <div class="form-group">
+                <label for="description" class="form-label">Description</label>
+                <input 
+                    id="description" 
+                    type="text" 
+                    name="description" 
+                    class="form-input" 
+                    placeholder="Search by description"
+                    value="<?= htmlspecialchars($_GET['description'] ?? '') ?>"
+                >
+            </div>
+            <div class="flex gap-3 items-end">
+                <button type="submit" class="btn btn-primary">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Filter
+                </button>
+                <a href="index.php?page=subnets" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="page-actions">
+    <a href="index.php?page=subnets&action=create" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Subnet
+    </a>
+    <a href="index.php?page=subnets&action=export&format=json" class="btn btn-success">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export JSON
+    </a>
+    <a href="index.php?page=subnets&action=export&format=xml" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export XML
+    </a>
+    <a href="index.php?page=subnets&action=export&format=csv" class="btn btn-warning">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export CSV
+    </a>
+    
+    <form class="flex gap-3 items-center" action="index.php?page=subnets&action=import" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="file" class="hidden" accept=".json,.xml,.csv">
+        <label for="file" class="btn btn-info cursor-pointer">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            Choose File
+        </label>
+        <span id="fileName" class="text-sm text-gray-600"></span>
+        <button type="submit" class="btn btn-primary">Import</button>
+    </form>
+</div>
+
+<!-- Subnets Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-lg font-semibold">Subnet List</h3>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Network</th>
+                    <th>CIDR</th>
+                    <th>Description</th>
+                    <th>Total IPs</th>
+                    <th>Used IPs</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($subnets)): ?>
+                    <?php foreach ($subnets as $subnet): ?>
+                        <tr>
+                            <td>
+                                <div class="font-medium text-gray-900"><?= htmlspecialchars($subnet['name']) ?></div>
+                            </td>
+                            <td>
+                                <code class="text-sm bg-gray-100 px-2 py-1 rounded"><?= htmlspecialchars($subnet['network']) ?></code>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary">/<?= htmlspecialchars($subnet['cidr']) ?></span>
+                            </td>
+                            <td>
+                                <div class="text-gray-600"><?= htmlspecialchars($subnet['description'] ?? '') ?></div>
+                            </td>
+                            <td>
+                                <span class="font-medium"><?= $subnet['total_ips'] ?? 0 ?></span>
+                            </td>
+                            <td>
+                                <span class="font-medium text-danger-color"><?= $subnet['used_ips'] ?? 0 ?></span>
+                            </td>
+                            <td>
+                                <span class="font-medium text-success-color"><?= $subnet['available_ips'] ?? 0 ?></span>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <a href="index.php?page=ips&subnet_id=<?= $subnet['id'] ?>" class="btn btn-sm btn-primary">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        IPs
+                                    </a>
+                                    <a href="index.php?page=subnets&action=edit&id=<?= $subnet['id'] ?>" class="btn btn-sm btn-secondary">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        Edit
+                                    </a>
+                                    <a href="index.php?page=subnets&action=delete&id=<?= $subnet['id'] ?>" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Are you sure you want to delete this subnet?')">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="8" class="text-center py-8">
+                            <div class="empty-state">
+                                <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                <div class="empty-state-title">No subnets found</div>
+                                <div class="empty-state-description">Get started by creating your first subnet.</div>
+                                <a href="index.php?page=subnets&action=create" class="btn btn-primary">
+                                    Create First Subnet
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('file').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || '';
+    document.getElementById('fileName').textContent = fileName;
+});
+</script>
+
+<?php
+$content = ob_get_clean();
+require_once 'views/layouts/app.php';
+?>

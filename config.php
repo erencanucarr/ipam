@@ -5,11 +5,12 @@ define('DB_NAME', 'ipam');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
-// Ensure nd_mysqli extension is loaded (compatible with mysqli API)
+// Ensure mysqli extension is loaded
 if (!extension_loaded('mysqli')) {
-    die('The nd_mysqli (or mysqli) extension is not loaded. Please enable it in your PHP configuration.');
+    die('The mysqli extension is not loaded. Please enable it in your PHP configuration.');
 }
-// Create global MySQLi connection (works with nd_mysqli)
+
+// Create global MySQLi connection
 $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysqli->connect_errno) {
     die('Database connection failed: ' . $mysqli->connect_error);

@@ -29,7 +29,8 @@ class Subnet
         $conn->close();
         return $subnets;
     }
-public static function search($filters = [])
+
+    public static function search($filters = [])
     {
         $conn = self::getConnection();
         $sql = "SELECT * FROM subnets WHERE 1=1";
@@ -137,10 +138,7 @@ public static function search($filters = [])
 
     private static function getConnection()
     {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        if ($conn->connect_error) {
-            die("Database connection failed: " . $conn->connect_error);
-        }
-        return $conn;
+        global $mysqli;
+        return $mysqli;
     }
 }

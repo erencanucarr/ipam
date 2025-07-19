@@ -16,22 +16,34 @@ class DashboardController
         $user_count = count(User::getAll());
         // Subnet count
         $subnet_count = count(Subnet::getAll());
+        
         // IP counts
-        $all_ips = [];
-        $assigned_count = $free_count = $reserved_count = 0;
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        $stmt = $conn->prepare("SELECT status FROM ip_addresses");
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($status);
-        while ($stmt->fetch()) {
-            if ($status === 'assigned') $assigned_count++;
-            elseif ($status === 'free') $free_count++;
-            elseif ($status === 'reserved') $reserved_count++;
+        if (defined('MOCK_MODE') && MOCK_MODE) {
+            global $mock_data;
+            $assigned_count = $free_count = $reserved_count = 0;
+            foreach ($mock_data['ip_addresses'] as $ip) {
+                if ($ip['status'] === 'assigned') $assigned_count++;
+                elseif ($ip['status'] === 'free') $free_count++;
+                elseif ($ip['status'] === 'reserved') $reserved_count++;
+            }
+            $ip_count = $assigned_count + $free_count + $reserved_count;
+        } else {
+            $all_ips = [];
+            $assigned_count = $free_count = $reserved_count = 0;
+            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            $stmt = $conn->prepare("SELECT status FROM ip_addresses");
+            $stmt->execute();
+            $stmt->store_result();
+            $stmt->bind_result($status);
+            while ($stmt->fetch()) {
+                if ($status === 'assigned') $assigned_count++;
+                elseif ($status === 'free') $free_count++;
+                elseif ($status === 'reserved') $reserved_count++;
+            }
+            $ip_count = $assigned_count + $free_count + $reserved_count;
+            $stmt->close();
+            $conn->close();
         }
-        $ip_count = $assigned_count + $free_count + $reserved_count;
-        $stmt->close();
-        $conn->close();
 
         require 'views/dashboard/index.php';
     }

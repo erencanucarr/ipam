@@ -1,494 +1,228 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard - Simple IPAM</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #e3eafc 0%, #f0f4f8 100%);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-        .dashboard-outer {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 40px 0;
-        }
-        .dashboard-container {
-            display: flex;
-            background: #fff;
-            border-radius: 22px;
-            box-shadow: 0 8px 32px rgba(25, 118, 210, 0.13), 0 2px 8px rgba(108, 99, 255, 0.10);
-            overflow: hidden;
-            min-width: 850px;
-            max-width: 1100px;
-            width: 100%;
-        }
-        .sidebar {
-            background: linear-gradient(135deg, #1976d2 60%, #6c63ff 100%);
-            color: #fff;
-            width: 260px;
-            min-height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2.5em 1.2em 2em 1.2em;
-            box-sizing: border-box;
-        }
-        .sidebar .avatar {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2em;
-            color: #1976d2;
-            font-weight: 700;
-            margin-bottom: 1.2em;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
-        }
-        .sidebar .user-name {
-            font-size: 1.25em;
-            font-weight: 700;
-            margin-bottom: 0.3em;
-            text-align: center;
-        }
-        .sidebar .role-badge {
-            display: inline-block;
-            background: #fff;
-            color: #1976d2;
-            font-size: 1em;
-            font-weight: 600;
-            border-radius: 6px;
-            padding: 0.2em 0.9em;
-            margin-bottom: 0.7em;
-            letter-spacing: 0.5px;
-            text-align: center;
-        }
-        .sidebar .meta-info {
-            margin-bottom: 1.5em;
-            text-align: center;
-        }
-        .sidebar .meta-info .meta-label {
-            font-size: 0.98em;
-            color: #e3eafc;
-            margin-bottom: 0.2em;
-            display: block;
-        }
-        .sidebar .meta-info .meta-value {
-            font-size: 1.05em;
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 0.3em;
-        }
-        .sidebar-section {
-            width: 100%;
-            background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            margin-bottom: 1.2em;
-            padding: 1em 0.7em 0.7em 0.7em;
-            box-sizing: border-box;
-        }
-        .sidebar-section h4 {
-            margin: 0 0 0.5em 0;
-            font-size: 1.08em;
-            font-weight: 700;
-            color: #e3eafc;
-            letter-spacing: 0.5px;
-        }
-        .sidebar-links {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5em;
-        }
-        .sidebar-link {
-            color: #fff;
-            text-decoration: none;
-            font-size: 1em;
-            font-weight: 500;
-            padding: 0.3em 0.7em;
-            border-radius: 6px;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-        }
-        .sidebar-link:hover {
-            background: rgba(255,255,255,0.18);
-        }
-        .sidebar-link svg {
-            width: 18px;
-            height: 18px;
-            vertical-align: middle;
-        }
-        .sidebar-info-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 0.98em;
-        }
-        .sidebar-info-list li {
-            margin-bottom: 0.3em;
-            color: #e3eafc;
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-        }
-        .sidebar-info-list svg {
-            width: 16px;
-            height: 16px;
-            vertical-align: middle;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background: #e53935;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 0.7em 1.5em;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(229, 57, 53, 0.10);
-            transition: background 0.2s;
-            width: 100%;
-        }
-        .sidebar .logout-btn:hover {
-            background: #b71c1c;
-        }
-        .main-content {
-            flex: 1;
-            padding: 2.5em 2.5em 2em 2.5em;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .dashboard-title {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #1a237e;
-            margin-bottom: 0.2em;
-            letter-spacing: 1px;
-        }
-        .dashboard-desc {
-            color: #444;
-            font-size: 1.13em;
-            margin-bottom: 2em;
-        }
-        .dashboard-actions {
-            display: flex;
-            gap: 1.2em;
-            margin-bottom: 2.2em;
-        }
-        .dashboard-actions a {
-            flex: 1 1 0;
-            background: linear-gradient(90deg, #1976d2 60%, #6c63ff 100%);
-            color: #fff;
-            padding: 0.6em 0;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-            letter-spacing: 0.5px;
-        }
-        .dashboard-actions a:hover {
-            background: linear-gradient(90deg, #0d47a1 60%, #6c63ff 100%);
-            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.18);
-            transform: translateY(-2px) scale(1.03);
-        }
-        .dashboard-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 1.5em;
-            width: 100%;
-            margin-bottom: 1.5em;
-        }
-        .stat-box {
-            background: #e3eafc;
-            border-radius: 14px;
-            padding: 1.5em 1.1em 1.2em 1.1em;
-            text-align: center;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
-            transition: box-shadow 0.2s, transform 0.2s;
-            position: relative;
-        }
-        .stat-box:hover {
-            box-shadow: 0 6px 24px rgba(25, 118, 210, 0.16);
-            transform: translateY(-2px) scale(1.04);
-            z-index: 2;
-        }
-        .stat-icon {
-            margin-bottom: 0.5em;
-            font-size: 2em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .stat-box.users { background: #e3eafc; }
-        .stat-box.subnets { background: #e3eafc; }
-        .stat-box.ips { background: #e3eafc; }
-        .stat-box.free { background: #eaffea; }
-        .stat-box.assigned { background: #ffeaea; }
-        .stat-box.reserved { background: #f4f4f4; }
-        .stat-value {
-            font-size: 2.1em;
-            font-weight: 700;
-            color: #1976d2;
-        }
-        .stat-box.free .stat-value { color: #388e3c; }
-        .stat-box.assigned .stat-value { color: #e53935; }
-        .stat-box.reserved .stat-value { color: #757575; }
-        .stat-label {
-            color: #1a237e;
-            font-weight: 700;
-            margin-top: 0.2em;
-            font-size: 1.08em;
-            letter-spacing: 0.5px;
-            text-shadow: 0 1px 2px #fff, 0 0 2px #e3eafc;
-        }
-        .stat-box.free .stat-label { color: #388e3c; text-shadow: 0 1px 2px #fff, 0 0 2px #eaffea; }
-        .stat-box.assigned .stat-label { color: #e53935; text-shadow: 0 1px 2px #fff, 0 0 2px #ffeaea; }
-        .stat-box.reserved .stat-label { color: #757575; text-shadow: 0 1px 2px #fff, 0 0 2px #f4f4f4; }
-        @media (max-width: 1100px) {
-            .dashboard-container { min-width: 0; flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; justify-content: flex-start; align-items: center; padding: 1.5em 1em; }
-            .sidebar .logout-btn { width: auto; margin-left: auto; }
-            .main-content { padding: 1.5em 1em; }
-        }
-        @media (max-width: 800px) {
-            .dashboard-outer { padding: 10px 0; }
-            .dashboard-container { min-width: 0; flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; justify-content: flex-start; align-items: center; padding: 1em 0.5em; }
-            .sidebar .logout-btn { width: auto; margin-left: auto; }
-            .main-content { padding: 1em 0.5em; }
-            .dashboard-stats-grid { grid-template-columns: 1fr; grid-template-rows: repeat(6, 1fr); }
-        }
-    </style>
-</head>
 <?php
+$page_title = 'Dashboard - IPAM System';
+$current_page = 'dashboard';
+
 // Fetch latest Help Docs (show 1-2 articles)
 require_once __DIR__ . '/../../models/HelpDoc.php';
 $dashboard_help_docs = array_slice(HelpDoc::all(), 0, 2);
+
+ob_start();
 ?>
-<body>
-    <div class="dashboard-outer">
-        <div class="dashboard-container">
-            <div class="sidebar">
-                <div class="avatar">
-                    <?= strtoupper(substr($_SESSION['user_name'] ?? 'A', 0, 1)) ?>
-                </div>
-                <div class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></div>
-                <div class="role-badge"><?= htmlspecialchars($_SESSION['user_role'] ?? 'admin') ?></div>
-                <div class="meta-info">
-                    <span class="meta-label">Date & Time</span>
-                    <span class="meta-value"><?= date('d.m.Y H:i') ?></span>
-                    <span class="meta-label">Login IP</span>
-                    <span class="meta-value"><?= $_SERVER['REMOTE_ADDR'] ?? 'N/A' ?></span>
-                </div>
-                <div class="sidebar-section">
-                    <h4>Quick Links</h4>
-                    <div class="sidebar-links">
-                        <a class="sidebar-link" href="index.php?page=settings">
-                            <svg fill="none" viewBox="0 0 20 20"><path d="M11.3 1.046a1 1 0 00-2.6 0l-.25.832a1 1 0 01-.95.69H5.5a1 1 0 00-.98 1.197l.16.832a1 1 0 01-.287.95l-.66.66a1 1 0 000 1.414l.66.66a1 1 0 01.287.95l-.16.832A1 1 0 005.5 11.432h1.999a1 1 0 01.95.69l.25.832a1 1 0 002.6 0l.25-.832a1 1 0 01.95-.69H14.5a1 1 0 00.98-1.197l-.16-.832a1 1 0 01.287-.95l.66-.66a1 1 0 000-1.414l-.66-.66a1 1 0 01-.287-.95l.16-.832A1 1 0 0014.5 3.568h-1.999a1 1 0 01-.95-.69l-.25-.832z" fill="#e3eafc"/></svg>
-                            Settings
-                        </a>
-                        <?php if ($_SESSION['user_role'] !== 'support'): ?>
-                        <a class="sidebar-link" href="index.php?page=help">
-                            <svg fill="none" viewBox="0 0 20 20"><path d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-8 4a1 1 0 100-2 1 1 0 000 2zm1-7a1 1 0 00-2 0c0 1 2 1.5 2 3h-2" stroke="#e3eafc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Help & Docs
-                        </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="sidebar-section">
-                    <h4>System Info</h4>
-                    <ul class="sidebar-info-list">
-                        <li>
-                            <svg fill="none" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="12" rx="2" fill="#e3eafc"/></svg>
-                            PHP <?= phpversion() ?>
-                        </li>
-                        <li>
-                            <svg fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#e3eafc"/></svg>
-                            Server: <?= $_SERVER['SERVER_NAME'] ?? 'N/A' ?>
-                        </li>
-                        <li>
-                            <svg fill="none" viewBox="0 0 20 20"><rect x="4" y="8" width="12" height="4" rx="2" fill="#e3eafc"/></svg>
-                            App v1.0
-                        </li>
-                    </ul>
-                </div>
-                <div class="sidebar-section">
-                    <h4>Dev Info</h4>
-                    <div style="margin-bottom:0.7em;">
-                        <span style="display:flex;align-items:center;gap:0.5em;">
-                            <!-- User/Dev Icon -->
-                            <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="7" r="4" fill="#e3eafc"/><path d="M2 18a8 8 0 1116 0H2z" fill="#e3eafc"/></svg>
-                            <span style="font-weight:600;">Eren Can Uçar</span>
-                        </span>
-                        <span style="display:flex;align-items:center;gap:0.5em;margin-top:0.2em;">
-                            <!-- Mail Icon -->
-                            <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="12" rx="3" fill="#e3eafc"/><path d="M4 6l6 5 6-5" stroke="#1976d2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <span style="font-size:0.98em;">dev@eren.gg</span>
-                        </span>
-                    </div>
-                    <div style="display:flex;gap:1em;align-items:center;">
-                        <a href="https://www.linkedin.com/in/erencanucarr/" target="_blank" title="LinkedIn" style="display:flex;align-items:center;">
-                            <!-- LinkedIn SVG -->
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#e3eafc"/><path d="M7.75 8.5a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0zM6.5 10.25h2.5v7.25h-2.5V10.25zM11.25 10.25h2.4v1.02h.03c.33-.62 1.13-1.27 2.32-1.27 2.48 0 2.94 1.63 2.94 3.75v4.25h-2.5v-3.77c0-.9-.02-2.06-1.25-2.06-1.25 0-1.44.98-1.44 1.99v3.84h-2.5v-7.25z" fill="#1976d2"/></svg>
-                        </a>
-                        <a href="https://github.com/erencanucarr" target="_blank" title="GitHub" style="display:flex;align-items:center;">
-                            <!-- GitHub SVG -->
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#e3eafc"/><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.48 2.87 8.28 6.84 9.63.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.1-1.5-1.1-1.5-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.38-2.03 1-2.75-.1-.26-.44-1.3.1-2.7 0 0 .83-.27 2.75 1.02A9.36 9.36 0 0112 6.84c.84.004 1.68.11 2.47.32 1.92-1.29 2.75-1.02 2.75-1.02.54 1.4.2 2.44.1 2.7.62.72 1 1.63 1 2.75 0 3.94-2.34 4.81-4.57 5.07.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.58.69.48C19.13 20.54 22 16.74 22 12.26 22 6.58 17.52 2 12 2z" fill="#1976d2"/></svg>
-                        </a>
-                    </div>
-                </div>
-                <form method="post" action="index.php?page=logout" style="width:100%;">
-<?php if (!empty($_SESSION['flash_success'])): ?>
-    <div style="background:#eaffea;color:#388e3c;border:1.5px solid #388e3c;padding:1em 1.2em;border-radius:8px;font-weight:600;margin-bottom:1.2em;">
-        <?= htmlspecialchars($_SESSION['flash_success']) ?>
-    </div>
-    <?php unset($_SESSION['flash_success']); ?>
-<?php endif; ?>
-<?php if (!empty($_SESSION['flash_error'])): ?>
-    <div style="background:#ffeaea;color:#e53935;border:1.5px solid #e53935;padding:1em 1.2em;border-radius:8px;font-weight:600;margin-bottom:1.2em;">
-        <?= htmlspecialchars($_SESSION['flash_error']) ?>
-    </div>
-    <?php unset($_SESSION['flash_error']); ?>
-<?php endif; ?>
-                    <button type="submit" class="logout-btn">Logout</button>
-                </form>
+
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-description">Welcome to your IPAM System dashboard. Manage your network infrastructure efficiently.</p>
+</div>
+
+<!-- Quick Actions -->
+<div class="page-actions">
+    <?php if ($_SESSION['user_role'] !== 'support'): ?>
+        <a href="index.php?page=users" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+            </svg>
+            User Management
+        </a>
+        <a href="index.php?page=subnets" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            Manage Subnets
+        </a>
+        <a href="index.php?page=audit_logs" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            Audit Logs
+        </a>
+        <a href="index.php?page=ipreport" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            IP Reports
+        </a>
+    <?php endif; ?>
+</div>
+
+<!-- Statistics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-primary-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
             </div>
-            <div class="main-content">
-                <div class="dashboard-title">IPAM Admin Dashboard</div>
-                <div class="dashboard-desc">
-                    Welcome to your dashboard. Manage subnets, IP addresses, users, and view audit logs with ease.
+            <div class="text-3xl font-bold text-gray-900 mb-2"><?= $user_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Total Users</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-primary-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-2"><?= $subnet_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Active Subnets</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-primary-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-2"><?= $ip_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Total IP Addresses</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-success-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="text-3xl font-bold text-success-color mb-2"><?= $free_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Available IPs</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-danger-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div class="text-3xl font-bold text-danger-color mb-2"><?= $assigned_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Assigned IPs</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="mb-4">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-warning-color mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <div class="text-3xl font-bold text-warning-color mb-2"><?= $reserved_count ?? 0 ?></div>
+            <div class="text-gray-600 font-medium">Reserved IPs</div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold">System Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">PHP Version</span>
+                    <span class="font-medium"><?= phpversion() ?></span>
                 </div>
-                <div class="dashboard-actions">
-                    <?php if ($_SESSION['user_role'] !== 'support'): ?>
-                    <a href="index.php?page=users">User Management</a>
-                    <a href="index.php?page=subnets">Subnets</a>
-                    <a href="index.php?page=audit_logs">Audit Log</a>
-                    <a href="index.php?page=ipreport">IP Usage & Conflict Report</a>
-                    <?php endif; ?>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Server</span>
+                    <span class="font-medium"><?= $_SERVER['SERVER_NAME'] ?? 'N/A' ?></span>
                 </div>
-                <hr style="border: none; border-top: 2px solid #e3eafc; margin: 0 0 2em 0;">
-                <div class="dashboard-stats-grid">
-                    <div class="stat-box users">
-                        <div class="stat-icon">
-                            <!-- User SVG (person) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <circle cx="16" cy="12" r="6" fill="#1976d2"/>
-                                <path d="M6 26c0-3.3137 4.477-6 10-6s10 2.6863 10 6v2H6v-2z" fill="#b6c6e6"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $user_count ?? 0 ?></div>
-                        <div class="stat-label">Users</div>
-                    </div>
-                    <div class="stat-box subnets">
-                        <div class="stat-icon">
-                            <!-- Subnet SVG (network/branch) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <circle cx="8" cy="24" r="4" fill="#1976d2"/>
-                                <circle cx="24" cy="24" r="4" fill="#1976d2"/>
-                                <circle cx="16" cy="8" r="4" fill="#1976d2"/>
-                                <path d="M16 12v4M16 16l-4 4M16 16l4 4" stroke="#1976d2" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $subnet_count ?? 0 ?></div>
-                        <div class="stat-label">Subnets</div>
-                    </div>
-                    <div class="stat-box ips">
-                        <div class="stat-icon">
-                            <!-- IP SVG (globe) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <circle cx="16" cy="16" r="12" fill="#6c63ff" opacity="0.18"/>
-                                <ellipse cx="16" cy="16" rx="8" ry="12" stroke="#6c63ff" stroke-width="2"/>
-                                <ellipse cx="16" cy="16" rx="12" ry="8" stroke="#6c63ff" stroke-width="2"/>
-                                <circle cx="16" cy="16" r="2" fill="#6c63ff"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $ip_count ?? 0 ?></div>
-                        <div class="stat-label">Total IPs</div>
-                    </div>
-                    <div class="stat-box free">
-                        <div class="stat-icon">
-                            <!-- Free SVG (checkmark) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <circle cx="16" cy="16" r="12" fill="#388e3c" opacity="0.13"/>
-                                <path d="M10 17l4 4 8-8" stroke="#388e3c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $free_count ?? 0 ?></div>
-                        <div class="stat-label">Free</div>
-                    </div>
-                    <div class="stat-box assigned">
-                        <div class="stat-icon">
-                            <!-- Assigned SVG (plug) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <rect x="10" y="18" width="12" height="6" rx="3" fill="#e53935" opacity="0.13"/>
-                                <rect x="14" y="8" width="4" height="10" rx="2" fill="#e53935"/>
-                                <rect x="12" y="6" width="2" height="4" rx="1" fill="#e53935"/>
-                                <rect x="18" y="6" width="2" height="4" rx="1" fill="#e53935"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $assigned_count ?? 0 ?></div>
-                        <div class="stat-label">Assigned</div>
-                    </div>
-                    <div class="stat-box reserved">
-                        <div class="stat-icon">
-                            <!-- Reserved SVG (lock) -->
-                            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                                <rect x="8" y="16" width="16" height="10" rx="4" fill="#757575" opacity="0.13"/>
-                                <rect x="12" y="20" width="8" height="4" rx="2" fill="#757575"/>
-                                <rect x="12" y="12" width="8" height="6" rx="4" fill="#757575"/>
-                            </svg>
-                        </div>
-                        <div class="stat-value"><?= $reserved_count ?? 0 ?></div>
-                        <div class="stat-label">Reserved</div>
-                    </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Application Version</span>
+                    <span class="font-medium">v1.0</span>
                 </div>
-                <!-- Help & Docs section below stats grid -->
-                <div style="margin: 2.5em 0 0.5em 0;">
-                    <hr style="border: none; border-top: 2px solid #e3eafc; margin-bottom: 1.5em;">
-                    <div style="font-size:1.18em;font-weight:700;color:#1976d2;margin-bottom:0.7em;">Help & Docs</div>
-                    <?php if (!empty($dashboard_help_docs)): ?>
-                        <?php foreach ($dashboard_help_docs as $doc): ?>
-                            <div style="background:#f8fafc;border-radius:12px;padding:1.2em 1em;margin-bottom:1.2em;box-shadow:0 2px 8px rgba(25,118,210,0.06);">
-                                <div style="font-size:1.1em;font-weight:700;color:#1976d2;margin-bottom:0.2em;"><?= $doc['title'] ?></div>
-                                <div style="font-size:0.98em;color:#888;margin-bottom:0.5em;">
-                                    By <?= $doc['author'] ?> &middot; <?= $doc['created_at'] ?>
-                                </div>
-                                <div style="color:#222;font-size:1.05em;"><?= $doc['content'] ?></div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div style="color:#888;">No help articles yet. Add one from the Help & Docs page.</div>
-                    <?php endif; ?>
-                    <div style="text-align:right;">
-                        <a href="index.php?page=help" style="color:#1976d2;font-weight:600;text-decoration:underline;">See all Help Docs &rarr;</a>
-                    </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Current User</span>
+                    <span class="font-medium"><?= htmlspecialchars($_SESSION['user_name'] ?? 'N/A') ?></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">User Role</span>
+                    <span class="badge badge-primary"><?= htmlspecialchars($_SESSION['user_role'] ?? 'user') ?></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Login IP</span>
+                    <span class="font-medium"><?= $_SERVER['REMOTE_ADDR'] ?? 'N/A' ?></span>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold">Developer Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-gray-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="font-medium">Eren Can Uçar</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-gray-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-gray-600">dev@eren.gg</span>
+                </div>
+                <div class="flex gap-3">
+                    <a href="https://www.linkedin.com/in/erencanucarr/" target="_blank" class="btn btn-sm btn-secondary">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                        LinkedIn
+                    </a>
+                    <a href="https://github.com/erencanucarr" target="_blank" class="btn btn-sm btn-secondary">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help & Documentation -->
+<?php if (!empty($dashboard_help_docs)): ?>
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-lg font-semibold">Recent Help Articles</h3>
+    </div>
+    <div class="card-body">
+        <div class="space-y-4">
+            <?php foreach ($dashboard_help_docs as $doc): ?>
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2"><?= htmlspecialchars($doc['title']) ?></h4>
+                    <p class="text-sm text-gray-500 mb-2">
+                        By <?= htmlspecialchars($doc['author']) ?> • <?= htmlspecialchars($doc['created_at']) ?>
+                    </p>
+                    <p class="text-gray-700"><?= htmlspecialchars($doc['content']) ?></p>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="mt-4 text-right">
+            <a href="index.php?page=help" class="btn btn-primary">
+                View All Help Articles
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php
+$content = ob_get_clean();
+require_once 'views/layouts/app.php';
+?>

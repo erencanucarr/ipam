@@ -126,12 +126,8 @@ class User
             if (password_verify($password, $user['password'])) {
                 return $user;
             }
-            // Legacy support: if password is MD5, allow login and rehash
-            if ($user['password'] === md5($password)) {
-                // Rehash and update to secure hash
-                self::updatePassword($user['id'], $password);
-                // Refetch user to get new hash
-                $user = self::findById($user['id']);
+            // If password is plain text (for development)
+            if ($password === $user['password']) {
                 return $user;
             }
         }
@@ -140,10 +136,7 @@ class User
 
     private static function getConnection()
     {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        if ($conn->connect_error) {
-            die("Database connection failed: " . $conn->connect_error);
-        }
-        return $conn;
+        global $mysqli;
+        return $mysqli;
     }
 }

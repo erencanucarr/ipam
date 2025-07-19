@@ -60,12 +60,12 @@ class SubnetController
 
         // IMPORT logic
         if ($action === 'import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
                 header('Location: index.php?page=subnets&error=upload');
                 exit;
             }
-            $file = $_FILES['import_file']['tmp_name'];
-            $filename = $_FILES['import_file']['name'];
+            $file = $_FILES['file']['tmp_name'];
+            $filename = $_FILES['file']['name'];
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             $imported = 0;
             $subnets = [];
@@ -115,27 +115,37 @@ class SubnetController
                 'description' => $_POST['description'] ?? ''
             ];
             $subnet_id = Subnet::create($data);
-            // Generate all IPs for the subnet
-            require_once 'models/IpAddress.php';
-            $mask = cidrToMask($data['cidr']);
-            $ips = generateIPs($data['network'], $data['cidr']);
-            $created = 0;
-            // Prepare batch data for all IPs
-            $ipDataArray = [];
-            foreach ($ips as $ip) {
-                $ipDataArray[] = [
-                    'subnet_id' => $subnet_id,
-                    'address' => $ip,
-                    'mask' => $mask,
-                    'status' => 'free',
-                    'description' => '',
-                    'client' => ''
-                ];
+            
+            if (!defined('MOCK_MODE') || !MOCK_MODE) {
+                // Generate all IPs for the subnet (only in real database mode)
+                require_once 'models/IpAddress.php';
+                $mask = cidrToMask($data['cidr']);
+                $ips = generateIPs($data['network'], $data['cidr']);
+                $created = 0;
+                // Prepare batch data for all IPs
+                $ipDataArray = [];
+                foreach ($ips as $ip) {
+                    $ipDataArray[] = [
+                        'subnet_id' => $subnet_id,
+                        'address' => $ip,
+                        'mask' => $mask,
+                        'status' => 'free',
+                        'description' => '',
+                        'client' => ''
+                    ];
+                }
+                $created = IpAddress::createBatch($ipDataArray);
+                error_log("Subnet $subnet_id: Generated " . count($ips) . " IPs, created $created IPs.");
             }
-            $created = IpAddress::createBatch($ipDataArray);
-            error_log("Subnet $subnet_id: Generated " . count($ips) . " IPs, created $created IPs.");
-            AuditLog::create($_SESSION['user_id'], 'create', 'subnet', $subnet_id, 'Created subnet: ' . $data['name']);
-            $_SESSION['flash_success'] = "Subnet başarıyla eklendi.";
+            
+            if (defined('MOCK_MODE') && MOCK_MODE) {
+                // Mock audit log
+                $_SESSION['flash_success'] = "Subnet başarıyla eklendi.";
+            } else {
+                AuditLog::create($_SESSION['user_id'], 'create', 'subnet', $subnet_id, 'Created subnet: ' . $data['name']);
+                $_SESSION['flash_success'] = "Subnet başarıyla eklendi.";
+            }
+            
             header('Location: index.php?page=subnets');
             exit;
         }
@@ -148,7 +158,11 @@ class SubnetController
                 'description' => $_POST['description'] ?? ''
             ];
             Subnet::update($id, $data);
-            AuditLog::create($_SESSION['user_id'], 'update', 'subnet', $id, 'Updated subnet: ' . $data['name']);
+            
+            if (!defined('MOCK_MODE') || !MOCK_MODE) {
+                AuditLog::create($_SESSION['user_id'], 'update', 'subnet', $id, 'Updated subnet: ' . $data['name']);
+            }
+            
             header('Location: index.php?page=subnets');
             exit;
         }
@@ -156,7 +170,11 @@ class SubnetController
         if ($action === 'delete' && $id) {
             $subnet = Subnet::find($id);
             Subnet::delete($id);
-            AuditLog::create($_SESSION['user_id'], 'delete', 'subnet', $id, 'Deleted subnet: ' . ($subnet['name'] ?? ''));
+            
+            if (!defined('MOCK_MODE') || !MOCK_MODE) {
+                AuditLog::create($_SESSION['user_id'], 'delete', 'subnet', $id, 'Deleted subnet: ' . ($subnet['name'] ?? ''));
+            }
+            
             header('Location: index.php?page=subnets');
             exit;
         }
